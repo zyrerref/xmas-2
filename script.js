@@ -3,12 +3,9 @@ const $ = (id) => document.getElementById(id);
 
 // Base64 (UTF-8 safe)
 function encodeData(obj) {
-  // JSON -> UTF-8 -> Base64
   return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
 }
-
 function decodeData(str) {
-  // Base64 -> UTF-8 -> JSON
   return JSON.parse(decodeURIComponent(escape(atob(str))));
 }
 
@@ -16,8 +13,7 @@ const state = {
   snowOn: true,
   musicOn: false,
   revealed: false,
-  theme: localStorage.getItem("xmas_theme") || "dark",
-  audioCtx: null
+  theme: localStorage.getItem("xmas_theme") || "dark"
 };
 
 // ===== Elements =====
@@ -36,6 +32,10 @@ const copyBtn = $("copyBtn");
 const nativeShareBtn = $("nativeShareBtn");
 const resetBtn = $("resetBtn");
 const themeBtn = $("themeBtn");
+
+// Music elements (must exist in HTML)
+const player = $("player");
+const songSelect = $("songSelect");
 
 // ===== FX Canvas =====
 const canvas = $("fx");
@@ -126,7 +126,7 @@ function updateConfetti() {
   }
 }
 
-// ===== Loop =====
+// ===== Render Loop =====
 function tick() {
   ctx.clearRect(0, 0, W, H);
 
@@ -142,46 +142,54 @@ function tick() {
 }
 tick();
 
-// ===== Audio (simple built-in chimes; no file needed) =====
-function playChime() {
-  if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const ac = state.audioCtx;
-
-  const now = ac.currentTime;
-  const freqs = [523.25, 659.25, 783.99]; // C5, E5, G5
-  freqs.forEach((f, i) => {
-    const o = ac.createOscillator();
-    const g = ac.createGain();
-    o.type = "sine";
-    o.frequency.value = f;
-
-    g.gain.setValueAtTime(0, now + i * 0.06);
-    g.gain.linearRampToValueAtTime(0.12, now + i * 0.06 + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.06 + 0.55);
-
-    o.connect(g);
-    g.connect(ac.destination);
-
-    o.start(now + i * 0.06);
-    o.stop(now + i * 0.06 + 0.6);
-  });
+// ===== Theme / Snow =====
+function setSnow(on) {
+  state.snowOn = on;
+  snowBtn.textContent = on ? "❄️ Snow: ON" : "❄️ Snow: OFF";
+  updateShareLink();
 }
 
-let musicInterval = null;
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  state.theme = t;
+  localStorage.setItem("xmas_theme", t);
+  updateShareLink();
+}
+
+function toggleTheme() {
+  const next = (document.documentElement.dataset.theme === "light") ? "dark" : "light";
+  setTheme(next);
+}
+
+// ===== Music (3 songs) =====
+// Your files must exist: /audio/song1.mp3 /audio/song2.mp3 /audio/song3.mp3
+function setSong(file) {
+  const wasPlaying = !player.paused && !player.ended;
+
+  player.src = `audio/${file}`;
+  player.load();
+
+  if (state.musicOn || wasPlaying) {
+    player.play().catch(() => {});
+  }
+
+  updateShareLink();
+}
+
 function setMusic(on) {
   state.musicOn = on;
   musicBtn.textContent = on ? "🔊 Music: ON" : "🔊 Music: OFF";
 
   if (on) {
-    playChime();
-    musicInterval = setInterval(playChime, 1800);
+    player.play().catch(() => {});
   } else {
-    clearInterval(musicInterval);
-    musicInterval = null;
+    player.pause();
   }
+
+  updateShareLink();
 }
 
-// ===== Greeting Preview + Share Link =====
+// ===== Greeting Preview =====
 function buildGreeting() {
   const to = (toName.value || "").trim();
   const from = (fromName.value || "").trim();
@@ -201,24 +209,26 @@ function buildGreeting() {
 }
 
 function updatePreview() {
-  const t = msg.value.length;
-  count.textContent = `${t}/140`;
+  count.textContent = `${msg.value.length}/140`;
   note.textContent = buildGreeting();
-  updateShareLink(); // IMPORTANT
+  updateShareLink();
 }
 
-// ===== BASE64 SHARE LINK (Option 1) =====
+// ===== Base64 Share Link (Option 1) =====
 function updateShareLink() {
+  // If songSelect/player not in HTML yet, don't crash
+  const songVal = songSelect ? songSelect.value : "song1.mp3";
+
   const data = {
     to: toName.value.trim(),
     from: fromName.value.trim(),
     msg: msg.value.trim(),
     theme: document.documentElement.dataset.theme || "dark",
-    snow: state.snowOn ? 1 : 0
+    snow: state.snowOn ? 1 : 0,
+    song: songVal
   };
 
   const encoded = encodeData(data);
-  // Keep it clean: only one param "d"
   shareLink.value = `${location.origin}${location.pathname}?d=${encoded}`;
 }
 
@@ -236,28 +246,15 @@ function readFromURL() {
 
     if (data.theme === "light" || data.theme === "dark") setTheme(data.theme);
     if (data.snow === 0 || data.snow === 1) setSnow(data.snow === 1);
+
+    // song from shared link
+    if (songSelect && data.song) {
+      songSelect.value = data.song;
+      setSong(data.song);
+    }
   } catch (e) {
-    // If someone edits the link or it's invalid, ignore it
     console.warn("Invalid share data in URL:", e);
   }
-}
-
-function setSnow(on) {
-  state.snowOn = on;
-  snowBtn.textContent = on ? "❄️ Snow: ON" : "❄️ Snow: OFF";
-  updateShareLink();
-}
-
-function setTheme(t) {
-  document.documentElement.dataset.theme = t;
-  state.theme = t;
-  localStorage.setItem("xmas_theme", t);
-  updateShareLink();
-}
-
-function toggleTheme() {
-  const next = (document.documentElement.dataset.theme === "light") ? "dark" : "light";
-  setTheme(next);
 }
 
 // ===== Surprise Reveal =====
@@ -266,7 +263,6 @@ function reveal() {
 
   state.revealed = true;
   burstConfetti(220);
-
   $("subtitle").textContent = "Boom. Your greeting is ready to send. 😄";
   revealBtn.textContent = "✅ Revealed";
   revealBtn.disabled = true;
@@ -285,6 +281,10 @@ confettiBtn.addEventListener("click", () => burstConfetti(180));
 snowBtn.addEventListener("click", () => setSnow(!state.snowOn));
 
 musicBtn.addEventListener("click", () => setMusic(!state.musicOn));
+
+if (songSelect) {
+  songSelect.addEventListener("change", () => setSong(songSelect.value));
+}
 
 copyBtn.addEventListener("click", async () => {
   try {
@@ -310,13 +310,13 @@ nativeShareBtn.addEventListener("click", async () => {
         text,
         url
       });
-    } catch {
-      // user cancelled
-    }
+    } catch {}
   } else {
-    await navigator.clipboard.writeText(url);
-    nativeShareBtn.textContent = "Link Copied ✅";
-    setTimeout(() => (nativeShareBtn.textContent = "📤 Share"), 1100);
+    try {
+      await navigator.clipboard.writeText(url);
+      nativeShareBtn.textContent = "Link Copied ✅";
+      setTimeout(() => (nativeShareBtn.textContent = "📤 Share"), 1100);
+    } catch {}
   }
 });
 
@@ -324,14 +324,23 @@ resetBtn.addEventListener("click", () => {
   toName.value = "";
   fromName.value = "";
   msg.value = "";
-  state.revealed = false;
 
+  state.revealed = false;
   revealBtn.disabled = false;
   revealBtn.textContent = "✨ Reveal Surprise";
   $("subtitle").textContent = "Make it personal, then share it.";
+
   burstConfetti(60);
 
-  // Clean URL (remove ?d=...) without reload
+  // Stop music
+  if (player) {
+    player.pause();
+    player.currentTime = 0;
+  }
+  state.musicOn = false;
+  musicBtn.textContent = "🔊 Music: OFF";
+
+  // reset snow/theme stays as user preference; remove URL param
   history.replaceState({}, "", location.pathname);
 
   updatePreview();
@@ -344,4 +353,10 @@ setTheme(state.theme);
 $("year").textContent = `© ${new Date().getFullYear()}`;
 
 readFromURL();
+
+// Default song if nothing came from URL
+if (songSelect && player && !player.src) {
+  setSong(songSelect.value || "song1.mp3");
+}
+
 updatePreview();

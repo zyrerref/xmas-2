@@ -229,3 +229,26 @@ textarea{ resize:none; }
   .shareRow{ flex-direction:column; }
   .iconBtn{ border-radius: 12px; }
 }
+.songBox{
+  margin-top: 10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.songLabel{
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.songSelect{
+  padding: 12px 12px;
+  border-radius: 14px;
+  border:1px solid var(--border);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  outline:none;
+}
+[data-theme="light"] .songSelect{
+  background: rgba(255,255,255,.55);
+}
