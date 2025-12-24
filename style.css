@@ -1,0 +1,231 @@
+:root{
+  --bg1:#071021;
+  --bg2:#0b2a2b;
+  --card:#0e1627cc;
+  --text:#eef3ff;
+  --muted:#b9c3d9;
+  --accent:#ffdf6e;
+  --accent2:#7cf0ff;
+  --border:rgba(255,255,255,.12);
+  --shadow: 0 25px 60px rgba(0,0,0,.55);
+}
+
+[data-theme="light"]{
+  --bg1:#f3f7ff;
+  --bg2:#fff6ea;
+  --card:#ffffffcc;
+  --text:#131a2a;
+  --muted:#4b556a;
+  --accent:#d08300;
+  --accent2:#006c7a;
+  --border:rgba(0,0,0,.10);
+  --shadow: 0 25px 60px rgba(0,0,0,.18);
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+
+body{
+  color:var(--text);
+  background: radial-gradient(1200px 700px at 20% 10%, var(--bg2), var(--bg1));
+  overflow-x:hidden;
+}
+
+.bg{
+  position:fixed; inset:0;
+  background:
+    radial-gradient(800px 500px at 80% 30%, rgba(255,223,110,.18), transparent 60%),
+    radial-gradient(800px 500px at 20% 80%, rgba(124,240,255,.14), transparent 60%);
+  pointer-events:none;
+  filter: blur(0px);
+}
+
+.wrap{
+  min-height:100%;
+  display:grid;
+  place-items:center;
+  padding: 24px 14px;
+}
+
+.card{
+  width:min(720px, 100%);
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  padding: 18px 18px 14px;
+  position:relative;
+  overflow:hidden;
+}
+
+.top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border:1px solid var(--border);
+  color: var(--muted);
+  background: rgba(255,255,255,.05);
+  font-size: 13px;
+}
+
+.iconBtn{
+  border:1px solid var(--border);
+  background: rgba(255,255,255,.05);
+  color: var(--text);
+  width:42px; height:42px;
+  border-radius: 14px;
+  cursor:pointer;
+}
+
+.title{
+  margin: 16px 0 6px;
+  line-height:1.05;
+  font-size: clamp(28px, 4.3vw, 46px);
+  letter-spacing: -0.02em;
+}
+
+.glow{
+  text-shadow: 0 0 18px rgba(255,223,110,.25);
+}
+
+.subtitle{
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.inputs{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.field span{
+  font-size: 12px;
+  color: var(--muted);
+}
+
+input, textarea{
+  width:100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border:1px solid var(--border);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  outline:none;
+}
+
+[data-theme="light"] input,
+[data-theme="light"] textarea{
+  background: rgba(255,255,255,.55);
+}
+
+textarea{ resize:none; }
+
+.preview{
+  margin-top: 14px;
+  border:1px dashed var(--border);
+  border-radius: 18px;
+  padding: 12px;
+  background: rgba(255,255,255,.04);
+}
+
+.previewHead{
+  display:flex;
+  justify-content:space-between;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.note{
+  min-height: 64px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(0,0,0,.20);
+  border:1px solid var(--border);
+  line-height:1.35;
+  white-space:pre-wrap;
+}
+
+.controls{
+  display:flex;
+  flex-wrap:wrap;
+  gap: 10px;
+  margin: 14px 0 8px;
+}
+
+.btn{
+  border:1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,223,110,.22), rgba(255,255,255,.04));
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 14px;
+  cursor:pointer;
+  font-weight: 650;
+}
+
+.btn:hover{ transform: translateY(-1px); }
+.btn:active{ transform: translateY(0px); }
+
+.btn.ghost{
+  background: rgba(255,255,255,.05);
+  font-weight: 600;
+}
+
+.share{
+  margin-top: 10px;
+  border-top:1px solid var(--border);
+  padding-top: 12px;
+}
+
+.shareRow{
+  display:flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+#shareLink{
+  flex:1;
+  font-size: 13px;
+}
+
+.hint{
+  margin:0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.foot{
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align:center;
+}
+
+.fx{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+}
+
+@media (max-width: 640px){
+  .inputs{ grid-template-columns: 1fr; }
+  .shareRow{ flex-direction:column; }
+  .iconBtn{ border-radius: 12px; }
+}
